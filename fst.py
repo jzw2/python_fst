@@ -13,6 +13,8 @@ class State:
         self.transitions.append((input_symbol, output_symbol, target_state, weight))
 
 
+    def __repr__(self):
+        return f"State({self.name}, is_final={self.is_final}, final_weight={self.final_weight}, transitions={self.transitions})"
 class FST:
     def __init__(self):
         self.states = {}
@@ -28,7 +30,10 @@ class FST:
                 print(f"Set start state: {name}")
             print(f"Added state: {name}, is_final={is_final}, final_weight={final_weight}")
         else:
-            print(f"Already {name} already added")
+            if is_final:
+                self.states[name].is_final = True
+                self.states[name].final_weight = final_weight
+                print(f"Updated state: {name} to be final with weight {final_weight}")
 
     def add_transition(self, from_state_name, input_symbol, output_symbol, to_state_name, weight=1.0):
         if from_state_name not in self.states:
@@ -40,16 +45,19 @@ class FST:
         from_state.add_transition(input_symbol, output_symbol, to_state, weight)
 
     def transduce(self, input_string):
-        transduce_node(self, self.start_state, input_string)
+        return self.transduce_node(self.start_state, input_string)
 
     # assume no epsilon loops
     def transduce_node(self, node, input_string):
+        print("transducing", node.name, " input is ", input_string)
+
         new_node_list = []
         if input_string == "" and node.is_final:
             yield "", node.final_weight
         else:
             new_node_list = [arc + (input_string[1:],) for arc in node.transitions if arc[0] == input_string[0]]
         epsilon_list = [arc + (input_string,) for arc in node.transitions if arc[0] == "0"]
+        print(epsilon_list, new_node_list)
 
         for _, output, target, weight, input_rest in new_node_list + epsilon_list:
             for rec_output, total_weight in self.transduce_node(target, input_rest):
@@ -98,11 +106,8 @@ if __name__ == "__main__":
     # 0 1 b y 1.5
     # 1 2 c z 2.5
     # 2 3.5
-    fst.load_from_file("fst_definition.txt")
+    fst.load_from_file("fst_definition.fst")
 
-    input_string = "abc"
-    try:
-        output, total_weight = fst.process(input_string)
+    input_string = "ac"
+    for output, total_weight in fst.transduce(input_string):
         print(f"Input: {input_string}, Output: {output}, Total Weight: {total_weight}")
-    except ValueError as e:
-        print(f"Error: {e}")
