@@ -12,9 +12,6 @@ class State:
         print(f"Adding transition: {self.name} --{input_symbol}/{output_symbol}, {weight}--> {target_state.name}")
         self.transitions.append((input_symbol, output_symbol, target_state, weight))
 
-
-    def __repr__(self):
-        return f"State({self.name}, is_final={self.is_final}, final_weight={self.final_weight}, transitions={self.transitions})"
 class FST:
     def __init__(self):
         self.states = {}
